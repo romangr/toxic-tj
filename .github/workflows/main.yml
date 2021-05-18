@@ -36,7 +36,7 @@ jobs:
           region: ${{ secrets.FUNCTION_REGION }}
           source_dir: .
           # List of key-value pairs to set as environment variables in the form KEY1=VALUE1,KEY2=VALUE2.
-          env_vars: |
+          env_vars: >-
             DISCOVERY_API_KEY=${{ secrets.DISCOVERY_API_KEY }},
             DISCOVERY_URL=${{ secrets.DISCOVERY_URL }},
             TJ_API_KEY=${{ secrets.TJ_API_KEY }},
