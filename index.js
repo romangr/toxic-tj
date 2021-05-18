@@ -10,7 +10,9 @@ const TJ_ADD_COMMENT_URL = process.env.TJ_ADD_COMMENT_URL || "https://api.tjourn
 
 exports.handler = async (req, res) => {
   if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
-    throw new Error("Parameters are not set");
+    console.log(`Parameters are not set: ${DISCOVERY_API_KEY?.length} ${TJ_API_KEY?.length}`);
+    res.status(500).send("Parameters are not set");
+    return;
   }
   let requestData = req?.body?.data;
   let commentText = requestData?.text;
