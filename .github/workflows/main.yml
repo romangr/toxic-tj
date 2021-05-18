@@ -40,7 +40,7 @@ jobs:
             DISCOVERY_API_KEY=${{ secrets.DISCOVERY_API_KEY }},
             DISCOVERY_URL=${{ secrets.DISCOVERY_URL }},
             TJ_API_KEY=${{ secrets.TJ_API_KEY }},
-            BOT_ID=${{ secrets.BOT_ID }},
+            TJ_BOT_ID=${{ secrets.TJ_BOT_ID }},
             TJ_ADD_COMMENT_URL=${{ secrets.TJ_ADD_COMMENT_URL }}
           entry_point: handler
           runtime: nodejs14
