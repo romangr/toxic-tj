@@ -8,11 +8,10 @@ const TJ_API_KEY = process.env.TJ_API_KEY;
 const TJ_BOT_ID = process.env.TJ_BOT_ID || '400974';
 const TJ_ADD_COMMENT_URL = process.env.TJ_ADD_COMMENT_URL || "https://api.tjournal.ru/v1.8/comment/add";
 
-if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
-  throw new Error("Parameters are not set");
-}
-
 exports.handler = async (req, res) => {
+  if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
+    throw new Error("Parameters are not set");
+  }
   let requestData = req?.body?.data;
   let commentText = requestData?.text;
   let replyTo = requestData.reply_to;
