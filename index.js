@@ -1,12 +1,15 @@
 const {google} = require('googleapis');
 const gaxios = require('gaxios');
 const FormData = require('form-data');
+const Cache = require('caching-map');
 
 const DISCOVERY_API_KEY = process.env.DISCOVERY_API_KEY;
 const DISCOVERY_URL = process.env.DISCOVERY_URL || 'https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1';
 const TJ_API_KEY = process.env.TJ_API_KEY;
 const TJ_BOT_ID = process.env.TJ_BOT_ID || '400974';
 const TJ_ADD_COMMENT_URL = process.env.TJ_ADD_COMMENT_URL || "https://api.tjournal.ru/v1.8/comment/add";
+const PROCESSED_COMMENTS = new Cache(300);
+const INSTANCE = {};
 
 if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
   throw new Error("Parameters are not set");
@@ -17,16 +20,31 @@ exports.handler = async (req, res) => {
   let commentText = requestData?.text;
   let replyTo = requestData?.reply_to;
   let replyToText = replyTo?.text;
-  if (!commentText || !commentText.includes(`[@${TJ_BOT_ID}|`) || !replyToText || requestData.creator.id !== 81612) {
+  let creatorId = requestData.creator.id;
+  let commentId = requestData.id;
+  if (!commentText || !commentText.includes(`[@${TJ_BOT_ID}|`) || !replyToText || creatorId !== 81612 || PROCESSED_COMMENTS.get(commentId)) {
     res.json({
       result: `Not relevant comment`
     });
     return;
   }
-  console.log(`Comment text: ${commentText}, reply to text: ${replyToText}`);
-  res.json({
-    result: `Relevant comment`
-  });
+  PROCESSED_COMMENTS.set(commentId, INSTANCE);
+  console.info(`Comment text: ${commentText}, reply to text: ${replyToText}, creator id: ${creatorId}`);
+  let score = await getToxicityScore(replyToText);
+  let newCommentText = score
+      ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
+      : 'Я не смог посчитать токсичность';
+  try {
+    let tjResponse = await postTjComment(requestData.content.id, replyTo.id,
+        newCommentText);
+    res.json({
+      tjResponse: tjResponse.response.status,
+      result: `Toxicity probability is ${score}`
+    });
+  } catch (e) {
+    console.error(e.toString() + ' Response status: ' + e?.response?.status + '\nbody: ' + e?.response?.data);
+    res.status(500).send('Error occured during comment handling');
+  }
 };
 
 async function postTjComment(contentId, replyToId, text) {
