@@ -34,7 +34,7 @@ exports.handler = async (req, res) => {
   let newCommentText = score
       ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
       : 'Я не смог посчитать токсичность';
-  if (score && score > 85) {
+  if (score && score > 0.85) {
     newCommentText += '. Очень токсично, можно сказать, риторика ненависти!'
   }
   try {
