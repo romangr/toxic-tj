@@ -22,18 +22,21 @@ exports.handler = async (req, res) => {
   let replyToText = replyTo?.text;
   let creatorId = requestData.creator.id;
   let commentId = requestData.id;
-  if (!commentText || !commentText.includes(`[@${TJ_BOT_ID}|`) || !replyToText || creatorId !== 81612 || PROCESSED_COMMENTS.get(commentId)) {
+  if (!commentText || !commentText.includes(`[@${TJ_BOT_ID}|`) || !replyToText || PROCESSED_COMMENTS.get(commentId)) {
     res.json({
       result: `Not relevant comment`
     });
     return;
   }
   PROCESSED_COMMENTS.set(commentId, INSTANCE);
-  console.info(`Comment text: ${commentText}, reply to text: ${replyToText}, creator id: ${creatorId}`);
+  console.info(`Comment text: ${commentText}, reply to text: ${replyToText}, creator id: ${creatorId}, comment id: ${commentId}, cache size: ${PROCESSED_COMMENTS.size}`);
   let score = await getToxicityScore(replyToText);
   let newCommentText = score
       ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
       : 'Я не смог посчитать токсичность';
+  if (score && score > 85) {
+    newCommentText += '. Очень токсично, можно сказать, риторика ненависти!'
+  }
   try {
     await postTjComment(requestData.content.id, replyTo.id, newCommentText);
     res.json({
