@@ -23,21 +23,10 @@ exports.handler = async (req, res) => {
     });
     return;
   }
-  let score = await getToxicityScore(replyToText);
-  let newCommentText = score
-      ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
-      : 'Я не смог посчитать токсичность';
-  try {
-    let tjResponse = await postTjComment(requestData.content.id, replyTo.id,
-        newCommentText);
-    res.json({
-      tjResponse: tjResponse.response.status,
-      result: `Toxicity probability is ${score}`
-    });
-  } catch (e) {
-    console.log(e.toString() + ' Response status: ' + e?.response?.status + '\nbody: ' + e?.response?.data);
-    res.status(500).send('Error occured during comment handling');
-  }
+  console.log(`Comment text: ${commentText}, reply to text: ${replyToText}`);
+  res.json({
+    result: `Relevant comment`
+  });
 };
 
 async function postTjComment(contentId, replyToId, text) {
