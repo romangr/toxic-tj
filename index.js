@@ -35,10 +35,8 @@ exports.handler = async (req, res) => {
       ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
       : 'Я не смог посчитать токсичность';
   try {
-    let tjResponse = await postTjComment(requestData.content.id, replyTo.id,
-        newCommentText);
+    await postTjComment(requestData.content.id, replyTo.id, newCommentText);
     res.json({
-      tjResponse: tjResponse.response.status,
       result: `Toxicity probability is ${score}`
     });
   } catch (e) {
