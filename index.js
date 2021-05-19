@@ -17,7 +17,7 @@ exports.handler = async (req, res) => {
   let commentText = requestData?.text;
   let replyTo = requestData?.reply_to;
   let replyToText = replyTo?.text;
-  if (!commentText || !commentText.includes(`[@${TJ_BOT_ID}|`) || !replyToText || requestData.creator.id !== 400974) {
+  if (!commentText || !commentText.includes(`[@${TJ_BOT_ID}|`) || !replyToText || requestData.creator.id !== 81612) {
     res.json({
       result: `Not relevant comment`
     });
