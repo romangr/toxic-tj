@@ -8,8 +8,9 @@ const DISCOVERY_URL = process.env.DISCOVERY_URL || 'https://commentanalyzer.goog
 const TJ_API_KEY = process.env.TJ_API_KEY;
 const TJ_BOT_ID = process.env.TJ_BOT_ID || '400974';
 const TJ_ADD_COMMENT_URL = process.env.TJ_ADD_COMMENT_URL || "https://api.tjournal.ru/v1.8/comment/add";
-const PROCESSED_COMMENTS = new Cache(300);
+const PROCESSED_COMMENTS = new Cache(50);
 const INSTANCE = {};
+const VAHTER_ID = 250652;
 
 if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
   throw new Error("Parameters are not set");
@@ -22,7 +23,7 @@ exports.handler = async (req, res) => {
   let replyToText = replyTo?.text;
   let creatorId = requestData.creator.id;
   let commentId = requestData.id;
-  if (!commentText || !commentText.includes(`[@${TJ_BOT_ID}|`) || !replyToText || PROCESSED_COMMENTS.get(commentId)) {
+  if (!commentText || !replyToText || !isBotSummoned(commentText) || PROCESSED_COMMENTS.get(commentId)) {
     res.json({
       result: `Not relevant comment`
     });
@@ -82,4 +83,10 @@ async function getToxicityScore(replyToText) {
       }
   );
   return response.data?.attributeScores?.TOXICITY?.summaryScore?.value;
+}
+
+function isBotSummoned(commentText) {
+  return commentText.includes(`[@${TJ_BOT_ID}|`)
+      || commentText.includes('@Токсичный бот')
+      || commentText.includes(`[@${VAHTER_ID}|`)
 }
