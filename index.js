@@ -4,10 +4,12 @@ const FormData = require('form-data');
 const Cache = require('caching-map');
 
 const DISCOVERY_API_KEY = process.env.DISCOVERY_API_KEY;
-const DISCOVERY_URL = process.env.DISCOVERY_URL || 'https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1';
+const DISCOVERY_URL = process.env.DISCOVERY_URL
+    || 'https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1';
 const TJ_API_KEY = process.env.TJ_API_KEY;
 const TJ_BOT_ID = process.env.TJ_BOT_ID || '400974';
-const TJ_ADD_COMMENT_URL = process.env.TJ_ADD_COMMENT_URL || "https://api.tjournal.ru/v1.8/comment/add";
+const TJ_ADD_COMMENT_URL = process.env.TJ_ADD_COMMENT_URL
+    || "https://api.tjournal.ru/v1.8/comment/add";
 const PROCESSED_COMMENTS = new Cache(50);
 const INSTANCE = {};
 const VAHTER_ID = 250652;
@@ -23,28 +25,33 @@ exports.handler = async (req, res) => {
   let replyToText = replyTo?.text;
   let creatorId = requestData.creator.id;
   let commentId = requestData.id;
-  if (!commentText || !replyToText || !isBotSummoned(commentText) || PROCESSED_COMMENTS.get(commentId)) {
+  if (!commentText || !replyToText || !isBotSummoned(commentText)
+      || PROCESSED_COMMENTS.get(commentId)) {
     res.json({
       result: `Not relevant comment`
     });
     return;
   }
   PROCESSED_COMMENTS.set(commentId, INSTANCE);
-  console.info(`Comment text: ${commentText}, reply to text: ${replyToText}, creator id: ${creatorId}, comment id: ${commentId}, cache size: ${PROCESSED_COMMENTS.size}`);
+  console.info(
+      `Comment text: ${commentText}, reply to text: ${replyToText}, creator id: ${creatorId}, comment id: ${commentId}, cache size: ${PROCESSED_COMMENTS.size}`);
   let score = await getToxicityScore(replyToText);
-  let newCommentText = score
-      ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
-      : 'Я не смог посчитать токсичность';
-  if (score && score > 0.85) {
-    newCommentText += '. Очень токсично, можно сказать, риторика ненависти!'
-  }
+  let newCommentText = prepareNewCommentText(score);
   try {
+    if (!isBotExplicitlySummoned(commentText) && isVahterSummoned(commentText) && score < 0.8) {
+      res.json({
+        result: `Toxicity probability is ${score}`
+      });
+      return;
+    }
     await postTjComment(requestData.content.id, replyTo.id, newCommentText);
     res.json({
       result: `Toxicity probability is ${score}`
     });
   } catch (e) {
-    console.error(e.toString() + ' Response status: ' + e?.response?.status + '\nbody: ' + e?.response?.data);
+    console.error(
+        e.toString() + ' Response status: ' + e?.response?.status + '\nbody: '
+        + e?.response?.data);
     res.status(500).send('Error occured during comment handling');
   }
 };
@@ -85,8 +92,25 @@ async function getToxicityScore(replyToText) {
   return response.data?.attributeScores?.TOXICITY?.summaryScore?.value;
 }
 
-function isBotSummoned(commentText) {
+function prepareNewCommentText(score) {
+  let newCommentText = score
+      ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
+      : 'Я не смог посчитать токсичность';
+  if (score && score > 0.85) {
+    newCommentText += '. Очень токсично, можно сказать, риторика ненависти!'
+  }
+  return newCommentText;
+}
+
+function isVahterSummoned(commentText) {
+  return commentText.includes(`[@${VAHTER_ID}|`);
+}
+
+function isBotExplicitlySummoned(commentText) {
   return commentText.includes(`[@${TJ_BOT_ID}|`)
-      || commentText.includes('@Токсичный бот')
-      || commentText.includes(`[@${VAHTER_ID}|`)
+      || commentText.includes('@Токсичный бот');
+}
+
+function isBotSummoned(commentText) {
+  return isBotExplicitlySummoned(commentText) || isVahterSummoned(commentText);
 }
