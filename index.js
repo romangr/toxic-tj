@@ -32,9 +32,17 @@ exports.handler = async (req, res) => {
     contentId
   } = prepareInputs(req);
 
+  if (!commentId) {
+    console.log("No comment id!");
+    res.json({
+      result: 'No comment id!'
+    });
+    return;
+  }
+
   if (PROCESSED_COMMENTS.get(commentId)) {
     res.json({
-      result: `Already handled`
+      result: 'Already handled'
     });
     return;
   }
@@ -61,7 +69,7 @@ exports.handler = async (req, res) => {
   try {
     if (!isBotExplicitlySummoned(commentText) && isVahterSummoned(commentText) && score < 0.8) {
       res.json({
-        result: `Toxicity probability is ${score}`
+        result: `Handled`
       });
       return;
     }
@@ -165,9 +173,9 @@ function prepareInputs(req) {
   let commentText = requestData?.text;
   let replyTo = requestData?.reply_to;
   let replyToText = replyTo?.text;
-  let creatorId = requestData.creator.id;
-  let commentId = requestData.id;
-  let contentId = requestData.content.id;
+  let creatorId = requestData?.creator?.id;
+  let commentId = requestData?.id;
+  let contentId = requestData?.content?.id;
   return {
     requestData,
     commentText,

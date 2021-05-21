@@ -1,0 +1,40 @@
+{
+  "type": "new_comment",
+  "data": {
+    "id": 2102079,
+    "url": "https:\/\/tjournal.ru\/art\/84125-na-noch-glyadya?comment=2102074",
+    "text": " @Токсичный бот ",
+    "media": [
+    ],
+    "creator": {
+      "id": 1,
+      "avatar": "https:\/\/leonardo.osnova.io\/d49d71ab-f78a-db1d-b4c4-0c72b8fcda0e\/",
+      "name": "Ilya Chekalsky",
+      "url": "https:\/\/tjournal.ru\/u\/1-ilya-chekalsky"
+    },
+    "content": {
+      "id": 84125,
+      "title": "На ночь глядя",
+      "url": "https:\/\/tjournal.ru\/art\/84125-na-noch-glyadya",
+      "owner": {
+        "id": 214363,
+        "name": "Арт и дизайн",
+        "avatar": "https:\/\/leonardo.osnova.io\/357dedc0-c17e-2e05-e568-b7c383257091\/",
+        "url": "https:\/\/tjournal.ru\/art"
+      }
+    },
+    "reply_to": {
+      "id": 2102073,
+      "url": "https:\/\/tjournal.ru\/art\/84125-na-noch-glyadya?comment=2102073",
+      "text": "ReplyToText",
+      "media": [
+      ],
+      "creator": {
+        "id": 1,
+        "avatar": "https:\/\/leonardo.osnova.io\/d49d71ab-f78a-db1d-b4c4-0c72b8fcda0e\/",
+        "name": "Ilya Chekalsky",
+        "url": "https:\/\/tjournal.ru\/u\/1-ilya-chekalsky"
+      }
+    }
+  }
+}
