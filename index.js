@@ -140,14 +140,14 @@ function weekDayMoscowTime() {
   return new Date(new Date().getTime() + THREE_HOURS_IN_MILLIS).getDay();
 }
 
-async function handleNemExodareCase(replyTo, requestData, commentText,
-    contentId) {
+async function handleNemExodareCase(replyTo, requestData, commentText, contentId) {
   if (replyTo?.creator?.id === NEM_EXODARE_ID
       && weekDayMoscowTime() === 6
       && requestData?.content?.owner?.id === ROSTISLAVE_ID
       && commentText
       && isBotExplicitlySummoned(commentText)
       && replyTo?.id) {
+    console.log("Handling Nem Exodare case");
     await postTjComment(contentId, replyTo.id, `Этот коммент токсичен с вероятностью -${getRandomInt(50, 95)}%`);
     return true;
   }
