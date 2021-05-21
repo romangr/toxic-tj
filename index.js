@@ -32,6 +32,14 @@ exports.handler = async (req, res) => {
     contentId
   } = prepareInputs(req);
 
+  if (PROCESSED_COMMENTS.get(commentId)) {
+    res.json({
+      result: `Already handled`
+    });
+    return;
+  }
+  PROCESSED_COMMENTS.set(commentId, INSTANCE);
+
   let isHandled = await handleNemExodareCase(replyTo, requestData, commentText, contentId);
   if (isHandled) {
     res.json({
@@ -40,14 +48,12 @@ exports.handler = async (req, res) => {
     return;
   }
 
-  if (!commentText || !replyToText || !isBotSummoned(commentText)
-      || PROCESSED_COMMENTS.get(commentId)) {
+  if (!commentText || !replyToText || !isBotSummoned(commentText)) {
     res.json({
       result: `Not relevant comment`
     });
     return;
   }
-  PROCESSED_COMMENTS.set(commentId, INSTANCE);
   console.info(
       `Comment text: ${commentText}, reply to text: ${replyToText}, creator id: ${creatorId}, comment id: ${commentId}, cache size: ${PROCESSED_COMMENTS.size}`);
   let score = await getToxicityScore(replyToText);
