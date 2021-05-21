@@ -13,18 +13,33 @@ const TJ_ADD_COMMENT_URL = process.env.TJ_ADD_COMMENT_URL
 const PROCESSED_COMMENTS = new Cache(50);
 const INSTANCE = {};
 const VAHTER_ID = 250652;
+const NEM_EXODARE_ID = 175718;
+const ROSTISLAVE_ID = 212551;
+const THREE_HOURS_IN_MILLIS = 3 * 60 * 60 * 1000;
 
 if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
   throw new Error("Parameters are not set");
 }
 
 exports.handler = async (req, res) => {
-  let requestData = req?.body?.data;
-  let commentText = requestData?.text;
-  let replyTo = requestData?.reply_to;
-  let replyToText = replyTo?.text;
-  let creatorId = requestData.creator.id;
-  let commentId = requestData.id;
+  let {
+    requestData,
+    commentText,
+    replyTo,
+    replyToText,
+    creatorId,
+    commentId,
+    contentId
+  } = prepareInputs(req);
+
+  let isHandled = await handleNemExodareCase(replyTo, requestData, commentText, contentId);
+  if (isHandled) {
+    res.json({
+      result: `Handled`
+    });
+    return;
+  }
+
   if (!commentText || !replyToText || !isBotSummoned(commentText)
       || PROCESSED_COMMENTS.get(commentId)) {
     res.json({
@@ -44,9 +59,9 @@ exports.handler = async (req, res) => {
       });
       return;
     }
-    await postTjComment(requestData.content.id, replyTo.id, newCommentText);
+    await postTjComment(contentId, replyTo.id, newCommentText);
     res.json({
-      result: `Toxicity probability is ${score}`
+      result: `Handled`
     });
   } catch (e) {
     console.error(
@@ -113,4 +128,47 @@ function isBotExplicitlySummoned(commentText) {
 
 function isBotSummoned(commentText) {
   return isBotExplicitlySummoned(commentText) || isVahterSummoned(commentText);
+}
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function weekDayMoscowTime() {
+  return new Date(new Date().getTime() + THREE_HOURS_IN_MILLIS).getDay();
+}
+
+async function handleNemExodareCase(replyTo, requestData, commentText,
+    contentId) {
+  if (replyTo?.creator?.id === NEM_EXODARE_ID
+      && weekDayMoscowTime() === 6
+      && requestData?.content?.owner?.id === ROSTISLAVE_ID
+      && commentText
+      && isBotExplicitlySummoned(commentText)
+      && replyTo?.id) {
+    await postTjComment(contentId, replyTo.id, `Этот коммент токсичен с вероятностью -${getRandomInt(50, 95)}%`);
+    return true;
+  }
+  return false;
+}
+
+function prepareInputs(req) {
+  let requestData = req?.body?.data;
+  let commentText = requestData?.text;
+  let replyTo = requestData?.reply_to;
+  let replyToText = replyTo?.text;
+  let creatorId = requestData.creator.id;
+  let commentId = requestData.id;
+  let contentId = requestData.content.id;
+  return {
+    requestData,
+    commentText,
+    replyTo,
+    replyToText,
+    creatorId,
+    commentId,
+    contentId
+  };
 }
