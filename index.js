@@ -85,6 +85,10 @@ exports.handler = async (req, res) => {
   }
 };
 
+exports.clearCache = function () {
+  PROCESSED_COMMENTS.clear();
+}
+
 async function postTjComment(contentId, replyToId, text) {
   const formData = new FormData();
   formData.append('id', contentId);
