@@ -14,6 +14,7 @@ const PROCESSED_COMMENTS = new Cache(50);
 const INSTANCE = {};
 const VAHTER_ID = 250652;
 const ROSTISLAVE_ID = 212551;
+const SERGUUN_ID = 99944;
 const THREE_HOURS_IN_MILLIS = 3 * 60 * 60 * 1000;
 const TOXIC_COMMENTS = [
     '. Очень токсично, можно сказать, риторика ненависти!',
@@ -52,6 +53,14 @@ exports.handler = async (req, res) => {
   PROCESSED_COMMENTS.set(commentId, INSTANCE);
 
   let isHandled = await handleRostislaveCase(replyTo, requestData, commentText, contentId);
+  if (isHandled) {
+    res.json({
+      result: `Handled`
+    });
+    return;
+  }
+
+  isHandled = await handleSerguunCase(replyTo, requestData, commentText, contentId);
   if (isHandled) {
     res.json({
       result: `Handled`
@@ -170,6 +179,18 @@ async function handleRostislaveCase(replyTo, requestData, commentText, contentId
       && replyTo?.id) {
     console.log("Handling Rostix case");
     await postTjComment(contentId, replyTo.id, `Этот коммент токсичен с вероятностью -${getRandomInt(50, 95)}%`);
+    return true;
+  }
+  return false;
+}
+
+async function handleSerguunCase(replyTo, requestData, commentText, contentId) {
+  if (replyTo?.creator?.id == TJ_BOT_ID
+      && requestData?.creator?.id === SERGUUN_ID
+      && commentText
+      && replyTo?.id) {
+    console.log("Handling Serguun case");
+    await postTjComment(contentId, replyTo.id, '1.7.(3/4) Преследование ботов. Мы знаем, что комфортному общению можно препятствовать преследуя бота, например, одним и тем же вопросом или высказыванием. По жалобе преследуемого мы изучим ситуацию и можем ограничить доступ к TJ.');
     return true;
   }
   return false;
