@@ -215,7 +215,7 @@ describe('Request handling', () => {
     });
     expect(formDataMock.append).toHaveBeenCalledWith("id", 84125);
     expect(formDataMock.append).toHaveBeenCalledWith("reply_to", 2102073);
-    expect(formDataMock.append).toHaveBeenCalledWith("text", "Этот коммент токсичен с вероятностью 86%. Очень токсично, можно сказать, риторика ненависти!");
+    expect(formDataMock.append).toHaveBeenCalledWith("text", expect.stringMatching(/Этот коммент токсичен с вероятностью 86%. (Очень токсично, можно сказать, риторика ненависти!)|(Код красный!)/));
   });
 
   test('Comment is not handled twice', async () => {

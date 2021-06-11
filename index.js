@@ -15,6 +15,10 @@ const INSTANCE = {};
 const VAHTER_ID = 250652;
 const ROSTISLAVE_ID = 212551;
 const THREE_HOURS_IN_MILLIS = 3 * 60 * 60 * 1000;
+const TOXIC_COMMENTS = [
+    '. Очень токсично, можно сказать, риторика ненависти!',
+    '. Код красный!'
+];
 
 if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
   throw new Error("Parameters are not set");
@@ -129,7 +133,8 @@ function prepareNewCommentText(score) {
       ? `Этот коммент токсичен с вероятностью ${(score * 100).toFixed(0)}%`
       : 'Я не смог посчитать токсичность';
   if (score && score > 0.85) {
-    newCommentText += '. Очень токсично, можно сказать, риторика ненависти!'
+    let randomInt = getRandomInt(0, TOXIC_COMMENTS.length);
+    newCommentText += TOXIC_COMMENTS[randomInt];
   }
   return newCommentText;
 }
