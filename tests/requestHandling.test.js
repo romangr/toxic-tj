@@ -7,6 +7,8 @@ const {handler, clearCache} = require("../index");
 const commentWithoutText = require("./inputs/commentWithoutText.json");
 const commentWithoutReplyText = require("./inputs/commentWithoutReplyText.json");
 const commentWithoutBotMention = require("./inputs/commentWithoutBotMention.json");
+const replyFromSerguun = require("./inputs/replyFromSerguun.json");
+const rostixSaturdayThread = require("./inputs/rostixSaturdayThread.json");
 const commentWithBotMention = require("./inputs/commentWithBotMention.json");
 const commentWithTextBotMention = require("./inputs/commentWithTextBotMention.json");
 const commentWithVahterMention = require("./inputs/commentWithVahterMention.json");
@@ -122,6 +124,78 @@ describe('Request handling', () => {
     expect(formDataMock.append).toHaveBeenCalledWith("id", 84125);
     expect(formDataMock.append).toHaveBeenCalledWith("reply_to", 2102073);
     expect(formDataMock.append).toHaveBeenCalledWith("text", "Этот коммент токсичен с вероятностью 53%");
+  });
+
+  test('Reply from Serguun is handled', async () => {
+    let req = {
+      body: replyFromSerguun
+    };
+    let res = {};
+    res.json = jest.fn().mockReturnValueOnce({});
+    let client = buildMockedPerspectiveClient(0.53);
+    gaxios.request = jest.fn().mockReturnValueOnce({});
+    let formDataMock = {
+      append: jest.fn().mockReturnValueOnce({}),
+      getBuffer: () => "buffer",
+      getHeaders: () => {return {testHeader: "value"}}
+    };
+    FormData.mockImplementation(() => formDataMock);
+
+    await handler(req, res)
+
+    expect(res.json).toHaveBeenCalledWith({
+      result: `Handled`
+    });
+    expect(client.comments.analyze).toHaveBeenCalledTimes(0);
+    expect(gaxios.request).toHaveBeenCalledWith({
+      url: "https://api.tjournal.ru/v1.8/comment/add",
+      method: "POST",
+      data: expect.anything(),
+      headers: expect.objectContaining({
+        'X-Device-Token': 'TJ_API_KEY'
+      })
+    });
+    expect(formDataMock.append).toHaveBeenCalledWith("id", 84125);
+    expect(formDataMock.append).toHaveBeenCalledWith("reply_to", 2102073);
+    expect(formDataMock.append).toHaveBeenCalledWith("text", "1.7.(3/4) Преследование ботов. Мы знаем, что комфортному общению можно препятствовать преследуя бота, например, одним и тем же вопросом или высказыванием. По жалобе преследуемого мы изучим ситуацию и можем ограничить доступ к TJ.");
+  });
+
+  test('Comment with bot mention in Rostix thread on Saturday is handled', async () => {
+    let req = {
+      body: rostixSaturdayThread
+    };
+    let res = {};
+    res.json = jest.fn().mockReturnValueOnce({});
+    let client = buildMockedPerspectiveClient(0.53);
+    gaxios.request = jest.fn().mockReturnValueOnce({});
+    let formDataMock = {
+      append: jest.fn().mockReturnValueOnce({}),
+      getBuffer: () => "buffer",
+      getHeaders: () => {return {testHeader: "value"}}
+    };
+    jest.useFakeTimers('modern');
+    jest.setSystemTime(new Date(2021, 5, 12, 13, 0));
+    console.log(new Date().getDay());
+    FormData.mockImplementation(() => formDataMock);
+
+    await handler(req, res)
+
+    expect(res.json).toHaveBeenCalledWith({
+      result: `Handled`
+    });
+    expect(client.comments.analyze).toHaveBeenCalledTimes(0);
+    expect(gaxios.request).toHaveBeenCalledWith({
+      url: "https://api.tjournal.ru/v1.8/comment/add",
+      method: "POST",
+      data: expect.anything(),
+      headers: expect.objectContaining({
+        'X-Device-Token': 'TJ_API_KEY'
+      })
+    });
+    expect(formDataMock.append).toHaveBeenCalledWith("id", 84125);
+    expect(formDataMock.append).toHaveBeenCalledWith("reply_to", 2102073);
+    expect(formDataMock.append).toHaveBeenCalledWith("text", expect.stringMatching(/Этот коммент токсичен с вероятностью -\d\d%/));
+    jest.useRealTimers();
   });
 
   test('Comment with text bot mention is handled', async () => {
