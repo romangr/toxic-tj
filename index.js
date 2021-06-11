@@ -25,54 +25,112 @@ if (!(DISCOVERY_API_KEY && TJ_API_KEY)) {
   throw new Error("Parameters are not set");
 }
 
+const handlers = [
+  noCommentIdHandler,
+  commentAlreadyProcessedHandler,
+  rostixCaseHandler,
+  serguunCaseHandler,
+  generalCaseHandler
+]
+
 exports.handler = async (req, res) => {
+  let inputs = prepareInputs(req);
+
+  for (const handler of handlers) {
+    let result = await handler(inputs);
+    if (result.isHandled) {
+      if (result.error) {
+        res.status(500).send('Error occured during comment handling');
+        return;
+      }
+      res.json({
+        result: result.message || 'Handled'
+      });
+      return;
+    }
+  }
+  res.json({
+    result: 'Not relevant comment'
+  });
+};
+
+exports.clearCache = function () {
+  PROCESSED_COMMENTS.clear();
+}
+
+function noCommentIdHandler(inputs) {
+  if (!inputs.commentId) {
+    console.log("No comment id!");
+    return {
+      isHandled: true,
+      message: "No comment id!"
+    };
+  }
+  return {
+    isHandled: false
+  };
+}
+
+function commentAlreadyProcessedHandler(inputs) {
+  if (PROCESSED_COMMENTS.get(inputs.commentId)) {
+    return {
+      isHandled: true,
+      message: 'Already handled'
+    };
+  }
+  PROCESSED_COMMENTS.set(inputs.commentId, INSTANCE);
+  return {
+    isHandled: false
+  };
+}
+
+async function rostixCaseHandler(inputs) {
+  if (weekDayMoscowTime() === 6
+      && inputs.requestData?.content?.owner?.id === ROSTISLAVE_ID
+      && inputs.commentText
+      && isBotExplicitlySummoned(inputs.commentText)
+      && inputs.replyTo?.id) {
+    console.log("Handling Rostix case");
+    await postTjComment(inputs.contentId, inputs.replyTo.id, `Этот коммент токсичен с вероятностью -${getRandomInt(50, 95)}%`);
+    return {
+      isHandled: true
+    };
+  }
+  return {
+    isHandled: false
+  };
+}
+
+async function serguunCaseHandler(inputs) {
+  if (inputs.replyTo?.creator?.id == TJ_BOT_ID
+      && inputs.requestData?.creator?.id === SERGUUN_ID
+      && inputs.commentText
+      && inputs.replyTo?.id) {
+    console.log("Handling Serguun case");
+    await postTjComment(inputs.contentId, inputs.replyTo.id, '1.7.(3/4) Преследование ботов. Мы знаем, что комфортному общению можно препятствовать преследуя бота, например, одним и тем же вопросом или высказыванием. По жалобе преследуемого мы изучим ситуацию и можем ограничить доступ к TJ.');
+    return {
+      isHandled: true
+    };
+  }
+  return {
+    isHandled: false
+  };
+}
+
+async function generalCaseHandler(inputs) {
   let {
-    requestData,
     commentText,
     replyTo,
     replyToText,
     creatorId,
     commentId,
     contentId
-  } = prepareInputs(req);
-
-  if (!commentId) {
-    console.log("No comment id!");
-    res.json({
-      result: 'No comment id!'
-    });
-    return;
-  }
-
-  if (PROCESSED_COMMENTS.get(commentId)) {
-    res.json({
-      result: 'Already handled'
-    });
-    return;
-  }
-  PROCESSED_COMMENTS.set(commentId, INSTANCE);
-
-  let isHandled = await handleRostislaveCase(replyTo, requestData, commentText, contentId);
-  if (isHandled) {
-    res.json({
-      result: `Handled`
-    });
-    return;
-  }
-
-  isHandled = await handleSerguunCase(replyTo, requestData, commentText, contentId);
-  if (isHandled) {
-    res.json({
-      result: `Handled`
-    });
-    return;
-  }
+  } = inputs;
 
   if (!commentText || !replyToText || !isBotSummoned(commentText)) {
-    res.json({
-      result: `Not relevant comment`
-    });
-    return;
+    return {
+      isHandled: false
+    };
   }
   console.info(
       `Comment text: ${commentText}, reply to text: ${replyToText}, creator id: ${creatorId}, comment id: ${commentId}, cache size: ${PROCESSED_COMMENTS.size}`);
@@ -80,25 +138,23 @@ exports.handler = async (req, res) => {
   let newCommentText = prepareNewCommentText(score);
   try {
     if (!isBotExplicitlySummoned(commentText) && isVahterSummoned(commentText) && score < 0.8) {
-      res.json({
-        result: `Handled`
-      });
-      return;
+      return {
+        isHandled: true
+      };
     }
     await postTjComment(contentId, replyTo.id, newCommentText);
-    res.json({
-      result: `Handled`
-    });
+    return {
+      isHandled: true
+    };
   } catch (e) {
     console.error(
         e.toString() + ' Response status: ' + e?.response?.status + '\nbody: '
         + e?.response?.data);
-    res.status(500).send('Error occured during comment handling');
+    return {
+      isHandled: true,
+      error: true
+    };
   }
-};
-
-exports.clearCache = function () {
-  PROCESSED_COMMENTS.clear();
 }
 
 async function postTjComment(contentId, replyToId, text) {
@@ -169,31 +225,6 @@ function getRandomInt(min, max) {
 
 function weekDayMoscowTime() {
   return new Date(new Date().getTime() + THREE_HOURS_IN_MILLIS).getDay();
-}
-
-async function handleRostislaveCase(replyTo, requestData, commentText, contentId) {
-  if (weekDayMoscowTime() === 6
-      && requestData?.content?.owner?.id === ROSTISLAVE_ID
-      && commentText
-      && isBotExplicitlySummoned(commentText)
-      && replyTo?.id) {
-    console.log("Handling Rostix case");
-    await postTjComment(contentId, replyTo.id, `Этот коммент токсичен с вероятностью -${getRandomInt(50, 95)}%`);
-    return true;
-  }
-  return false;
-}
-
-async function handleSerguunCase(replyTo, requestData, commentText, contentId) {
-  if (replyTo?.creator?.id == TJ_BOT_ID
-      && requestData?.creator?.id === SERGUUN_ID
-      && commentText
-      && replyTo?.id) {
-    console.log("Handling Serguun case");
-    await postTjComment(contentId, replyTo.id, '1.7.(3/4) Преследование ботов. Мы знаем, что комфортному общению можно препятствовать преследуя бота, например, одним и тем же вопросом или высказыванием. По жалобе преследуемого мы изучим ситуацию и можем ограничить доступ к TJ.');
-    return true;
-  }
-  return false;
 }
 
 function prepareInputs(req) {
