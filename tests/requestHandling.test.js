@@ -29,7 +29,7 @@ describe('Request handling', () => {
     await handler(req, res)
 
     expect(res.json).toHaveBeenCalledWith({
-      result: `No comment id!`
+      result: 'Handled'
     });
     expect(gaxios.request).toHaveBeenCalledTimes(0);
   });
@@ -44,7 +44,7 @@ describe('Request handling', () => {
     await handler(req, res)
 
     expect(res.json).toHaveBeenCalledWith({
-      result: `Not relevant comment`
+      result: 'Handled'
     });
     expect(gaxios.request).toHaveBeenCalledTimes(0);
   });
@@ -59,7 +59,7 @@ describe('Request handling', () => {
     await handler(req, res)
 
     expect(res.json).toHaveBeenCalledWith({
-      result: `Not relevant comment`
+      result: 'Handled'
     });
     expect(gaxios.request).toHaveBeenCalledTimes(0);
   });
@@ -74,7 +74,7 @@ describe('Request handling', () => {
     await handler(req, res)
 
     expect(res.json).toHaveBeenCalledWith({
-      result: `Not relevant comment`
+      result: 'Handled'
     });
     expect(gaxios.request).toHaveBeenCalledTimes(0);
   });
@@ -316,7 +316,7 @@ describe('Request handling', () => {
       result: `Handled`
     });
     expect(res2.json).toHaveBeenCalledWith({
-      result: `Already handled`
+      result: 'Handled'
     });
     expect(gaxios.request).toHaveBeenCalledTimes(1);
   });
