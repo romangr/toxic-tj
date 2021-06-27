@@ -34,6 +34,10 @@ const handlers = [
 ]
 
 exports.handler = async (req, res) => {
+  res.json({
+    result: 'Handled'
+  });
+
   let inputs = prepareInputs(req);
 
   for (const handler of handlers) {
@@ -43,15 +47,9 @@ exports.handler = async (req, res) => {
         res.status(500).send('Error occured during comment handling');
         return;
       }
-      res.json({
-        result: result.message || 'Handled'
-      });
       return;
     }
   }
-  res.json({
-    result: 'Not relevant comment'
-  });
 };
 
 exports.clearCache = function () {
