@@ -44,7 +44,7 @@ exports.handler = async (req, res) => {
     let result = await handler(inputs);
     if (result.isHandled) {
       if (result.error) {
-        res.status(500).send('Error occured during comment handling');
+        res.status(500).send('Error occurred during comment handling');
         return;
       }
       return;
