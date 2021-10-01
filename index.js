@@ -105,7 +105,7 @@ async function serguunCaseHandler(inputs) {
       && inputs.commentText
       && inputs.replyTo?.id) {
     console.log("Handling Serguun case");
-    await postTjComment(inputs.contentId, inputs.replyTo.id, '1.7.(3/4) Преследование ботов. Мы знаем, что комфортному общению можно препятствовать преследуя бота, например, одним и тем же вопросом или высказыванием. По жалобе преследуемого мы изучим ситуацию и можем ограничить доступ к TJ.');
+    await postTjComment(inputs.contentId, inputs.commentId, '1.7.(3/4) Преследование ботов. Мы знаем, что комфортному общению можно препятствовать преследуя бота, например, одним и тем же вопросом или высказыванием. По жалобе преследуемого мы изучим ситуацию и можем ограничить доступ к TJ.');
     return {
       isHandled: true
     };

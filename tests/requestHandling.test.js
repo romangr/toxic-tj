@@ -156,7 +156,7 @@ describe('Request handling', () => {
       })
     });
     expect(formDataMock.append).toHaveBeenCalledWith("id", 84125);
-    expect(formDataMock.append).toHaveBeenCalledWith("reply_to", 2102073);
+    expect(formDataMock.append).toHaveBeenCalledWith("reply_to", 2102077);
     expect(formDataMock.append).toHaveBeenCalledWith("text", "1.7.(3/4) Преследование ботов. Мы знаем, что комфортному общению можно препятствовать преследуя бота, например, одним и тем же вопросом или высказыванием. По жалобе преследуемого мы изучим ситуацию и можем ограничить доступ к TJ.");
   });
 
